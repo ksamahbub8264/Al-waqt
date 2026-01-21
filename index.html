@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Al-Waqt | Prayer & Ramadan</title>
+  <meta name="theme-color" content="#0b3b2e" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body { font-family: Arial, sans-serif; background:#f5f7fa; margin:0; padding:16px; }
+    h1 { color:#0b3b2e; text-align:center; }
+    .card { background:#fff; padding:16px; margin-bottom:12px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1);}    
+    select, button { width:100%; padding:10px; margin-top:8px; }
+    button { background:#0b3b2e; color:#fff; border:none; border-radius:6px; }
+    table { width:100%; border-collapse:collapse; }
+    td { padding:6px; border-bottom:1px solid #eee; }
+  </style>
+</head>
+<body>
+
+<h1>🕌 Al-Waqt</h1>
+<p style="text-align:center">নামাজের সময়সূচী ও রমজান ক্যালেন্ডার</p>
+
+<div class="card">
+  <label>শহর নির্বাচন করুন</label>
+  <select id="city">
+    <option value="Dhaka">Dhaka</option>
+    <option value="Chittagong">Chittagong</option>
+    <option value="Mecca">Mecca</option>
+    <option value="Medina">Medina</option>
+  </select>
+  <button onclick="loadTimes()">সময় দেখুন</button>
+</div>
+
+<div class="card" id="result" style="display:none;">
+  <h3>আজকের নামাজের সময়</h3>
+  <table id="times"></table>
+  <p id="ramadan"></p>
+</div>
+
+<script>
+async function loadTimes(){
+  const city = document.getElementById('city').value;
+  const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=Bangladesh&method=2`);
+  const data = await res.json();
+  const t = data.data.timings;
+
+  document.getElementById('times').innerHTML = `
+    <tr><td>ফজর</td><td>${t.Fajr}</td></tr>
+    <tr><td>যোহর</td><td>${t.Dhuhr}</td></tr>
+    <tr><td>আসর</td><td>${t.Asr}</td></tr>
+    <tr><td>মাগরিব</td><td>${t.Maghrib}</td></tr>
+    <tr><td>ইশা</td><td>${t.Isha}</td></tr>
+  `;
+
+  const hijri = data.data.date.hijri;
+  document.getElementById('ramadan').innerText =
+    hijri.month.en === 'Ramadan'
+      ? `🌙 আজ রমজান ${hijri.day} তারিখ | ইফতার: ${t.Maghrib}`
+      : `আজ হিজরি মাস: ${hijri.month.en}`;
+
+  document.getElementById('result').style.display = 'block';
+}
+
+// Service Worker Register
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
